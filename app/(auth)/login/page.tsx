@@ -1,8 +1,9 @@
 'use client'
 
 import { initiateOAuth } from '@/app/actions/auth'
+import { trackEvent } from '@/lib/posthog-client'
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -10,18 +11,28 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  useEffect(() => {
+    trackEvent('login_page_viewed')
+  }, [])
+
   const handleOAuthClick = async (provider: 'google' | 'github') => {
     try {
+      trackEvent('login_started', { provider })
       setError(null)
       setIsLoading(true)
       const result = await initiateOAuth(provider)
-      
+
       if (result?.error) {
+        trackEvent('login_failed', { provider, error: result.error })
         setError(result.error)
       }
       // If no error, redirect will happen automatically via redirect() in Server Action
     } catch (err) {
       console.error('OAuth error:', err)
+      trackEvent('login_failed', {
+        provider,
+        error: 'oauth_init_failed',
+      })
       setError('oauth_init_failed')
     } finally {
       setIsLoading(false)

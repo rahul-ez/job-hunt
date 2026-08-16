@@ -6,9 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 1 — Foundation (in progress)
-**Last completed:** 02 Auth
-**Next:** 03 PostHog Initialization
+**Phase:** Phase 2 — Profile Page (starting next)
+**Last completed:** 04 Database Schema
+**Next:** 05 Profile Page — Full UI
 
 ---
 
@@ -18,8 +18,8 @@ Update this file after every completed feature. Any AI agent reading this should
 
 - [x] 01 Homepage
 - [x] 02 Auth
-- [ ] 03 PostHog Initialization
-- [ ] 04 Database Schema
+- [x] 03 PostHog Initialization
+- [x] 04 Database Schema
 
 ### Phase 2 — Profile Page
 

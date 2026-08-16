@@ -2,10 +2,22 @@
 
 import { useAuth } from '@/lib/auth'
 import { signOut } from '@/app/actions/auth'
+import { trackEvent } from '@/lib/posthog-client'
 import Link from 'next/link'
+import posthog from 'posthog-js'
+import { useEffect } from 'react'
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      trackEvent('dashboard_viewed', {
+        userId: user.id,
+        email: user.email,
+      })
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -40,14 +52,20 @@ export default function DashboardPage() {
               <h1 className="text-[28px] font-bold text-text-slate mb-2">Dashboard</h1>
               <p className="text-sm font-medium text-text-secondary">Welcome, {user.email}</p>
             </div>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="px-4 h-9 rounded-sm bg-overlay text-xs font-medium text-accent-foreground hover:bg-overlay-dark transition-colors"
-              >
-                Sign Out
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={async () => {
+                trackEvent('user_signed_out', {
+                  userId: user.id,
+                  email: user.email,
+                })
+                posthog.reset()
+                await signOut()
+              }}
+              className="px-4 h-9 rounded-sm bg-overlay text-xs font-medium text-accent-foreground hover:bg-overlay-dark transition-colors"
+            >
+              Sign Out
+            </button>
           </div>
 
           <div className="space-y-4">

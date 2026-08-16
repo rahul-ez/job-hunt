@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { insforge } from '@/lib/insforge-client'
+import posthog from 'posthog-js'
 
 type User = {
   id: string
@@ -26,8 +27,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function hydrateAuth() {
       const { data, error } = await insforge.auth.getCurrentUser()
       if (cancelled) return
-      setUser(error ? null : (data?.user ?? null))
+      const sdkUser = error ? null : (data?.user ?? null)
+      setUser(sdkUser)
       setLoading(false)
+      if (sdkUser) {
+        posthog.identify(sdkUser.id, {
+          email: sdkUser.email,
+          name: sdkUser.profile?.name,
+        })
+      }
     }
 
     void hydrateAuth()

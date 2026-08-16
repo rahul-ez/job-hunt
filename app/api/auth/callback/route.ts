@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createAuthActions } from '@insforge/sdk/ssr'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('insforge_code')
@@ -33,6 +34,25 @@ export async function GET(request: NextRequest) {
   }
 
   response.cookies.delete('insforge_code_verifier')
+
+  const posthog = getPostHogClient()
+  if (posthog && data.user.id) {
+    posthog.identify({
+      distinctId: data.user.id,
+      properties: {
+        email: data.user.email,
+        name: data.user.profile?.name,
+      },
+    })
+    posthog.capture({
+      distinctId: data.user.id,
+      event: 'user_signed_in',
+      properties: {
+        provider: data.user.providers?.[0] ?? 'oauth',
+      },
+    })
+    await posthog.flush()
+  }
 
   return response
 }

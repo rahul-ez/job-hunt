@@ -1,73 +1,47 @@
-# Memory — Feature 02 Auth Review & Fixes
+# Memory — Feature 04 Database Schema
 
-**Last updated:** 2026-08-15
+Last updated: 2026-08-16
 
 ## What was built
 
-**Feature 02: Auth** — COMPLETE with all critical issues fixed
-
-Authentication infrastructure fully implemented with error handling corrections:
-- [lib/insforge-client.ts](lib/insforge-client.ts) — Browser SDK singleton
-- [lib/insforge-server.ts](lib/insforge-server.ts) — Server SDK factory
-- [lib/auth.tsx](lib/auth.tsx) — AuthProvider + useAuth hook
-- [app/actions/auth.ts](app/actions/auth.ts) — Server Actions for OAuth and signOut (✅ error handling fixed)
-- [app/api/auth/refresh/route.ts](app/api/auth/refresh/route.ts) — Token refresh endpoint
-- [app/api/auth/callback/route.ts](app/api/auth/callback/route.ts) — OAuth callback handler
-- [proxy.ts](proxy.ts) — Next.js 16 proxy function (replaces deprecated middleware.ts)
-- [app/(auth)/login/page.tsx](app/(auth)/login/page.tsx) — Login page with Google + GitHub OAuth (✅ error handling fixed)
-- [app/(protected)/dashboard/page.tsx](app/(protected)/dashboard/page.tsx) — Protected dashboard placeholder
-- [.env.local](.env.local) — InsForge credentials configured
-
-**Documentation:**
-- [context/ui-registry.md](context/ui-registry.md) — LoginCard component patterns captured via `/imprint` skill
+- Logged into InsForge CLI and linked the project (JobPilot, `t3bkeev8.ap-southeast`).
+- InsForge agent skills and `find-skills` installed globally via the link command.
+- Created and applied 4 migration files in `migrations/`:
+  - `20260816055305_profiles.sql` — profiles table + RLS
+  - `20260816055328_agent-runs.sql` — agent_runs table + RLS
+  - `20260816055337_jobs.sql` — jobs table + 2 indexes + RLS
+  - `20260816055347_agent-logs.sql` — agent_logs table + index + RLS
+- Created the `resumes` storage bucket as **private** via `insforge storage create-bucket resumes --private`.
+- Updated `context/progress-tracker.md` — Feature 04 marked complete, next is Feature 05.
 
 ## Decisions made
 
-- OAuth flow: Server-side initiation with `skipBrowserRedirect: true` → codeVerifier in httpOnly cookie → callback exchanges code for session
-- Error handling: Server Actions return `{ error?: string }` instead of throwing — allows component-level error display
-- Browser client auto-refreshes via `/api/auth/refresh` when token expires
-- Proxy uses `proxy()` function (Next.js 16 convention, not deprecated middleware.ts pattern)
-- Folder structure: Root-level `/lib/` for all SDK initialization per architecture.md
+- Used `insforge db migrations` (new → up --all) instead of raw SQL import — keeps schema version-controlled and replayable.
+- Migration names use hyphens not underscores — CLI enforces lowercase letters, numbers, and hyphens only.
+- `resumes` bucket set to private (not public) — InsForge handles access control at the bucket level for private buckets. No separate `storage.objects` RLS policies needed.
+- Storage policies migration was written then discarded — InsForge's storage schema uses `bucket`/`key` columns (not Supabase's `bucket_id`/`name`), and private bucket access is enforced at bucket level, not via RLS.
 
 ## Problems solved
 
-**CRITICAL — Unhandled Server Action Errors:** `initiateOAuth()` was throwing errors without try-catch, causing generic server error pages. Solution: Wrapped in try-catch, changed to return `{ error?: string }` so component can handle gracefully.
-
-**CRITICAL — Broken Error Flow:** OAuth init errors didn't route back to login page with error messages. Solution: Replaced form submissions with onClick handlers that capture returned error and display inline.
-
-**Route Protection Pattern:** Component-level auth checks work correctly for SSR pattern (deferred for future optimization).
+- PowerShell does not support `&&` for chaining commands — ran each migration command separately.
+- CLI rejects underscores in migration names — used hyphens (`agent-runs`, `agent-logs`).
+- InsForge `storage.objects` has different column names than Supabase (`bucket` not `bucket_id`, `key` not `name`) — discovered by querying `information_schema.columns`.
+- `insforge db migrations up` requires an explicit mode flag — correct command is `up --all`.
 
 ## Current state
 
-✅ **Phase 1 — Foundation, Feature 02 — Auth: COMPLETE**
-
-- Google OAuth working end-to-end
-- GitHub OAuth working end-to-end
-- Session management: access token (browser cookie) + refresh token (httpOnly) working
-- All error handling compliant with code-standards.md
-- Login page displays errors inline (no server error page fallback)
-- Dashboard protected with auth gate
-- Build succeeds with no warnings or errors
-- TypeScript strict mode passes
-
-**Test status:**
-- ✓ Build: `npm run build` passes
-- ✓ Login page renders with OAuth buttons
-- ✓ Error handling tested (returns error object on failure)
+- All 4 tables exist in the live InsForge project with RLS enabled and scoped to `auth.uid() = user_id`.
+- `resumes` storage bucket exists, is private, 0 objects.
+- Phase 1 fully complete (01 Homepage, 02 Auth, 03 PostHog, 04 Database Schema).
+- Phase 2 not started.
 
 ## Next session starts with
 
-**Feature 03: PostHog Initialization** — Set up PostHog analytics before any agent features fire
-
-Create:
-1. `lib/posthog-client.ts` — PostHog browser client with `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`
-2. `lib/posthog-server.ts` — PostHog server client with `flushAt: 1` and `flushInterval: 0`
-3. Initialize PostHog in root layout (wrap entire app)
-4. Call `posthog.identify(userId)` after successful login in app/actions/auth.ts
-5. Call `posthog.reset()` on logout
-
-Add PostHog keys to .env.local after Feature 03 setup plan is confirmed.
+- Feature 05 — Profile Page Full UI.
+- Build the complete profile page with mock data first (no save logic yet).
+- Sections: profile completion banner, resume upload area, profile form (Personal Info, Professional Info, Work Experience, Education, Job Preferences), Save Profile button.
+- Run `/architect` before starting if the session is fresh.
 
 ## Open questions
 
-None. Auth is locked in and working. Ready to proceed with PostHog immediately.
+- None — schema is clean and matches `architecture.md` exactly (with the InsForge storage column name difference documented above).

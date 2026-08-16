@@ -4,6 +4,7 @@ import type { JSX } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { trackEvent } from "@/lib/posthog-client";
 import { LandingCta } from "@/components/homepage/LandingCta";
 import { LandingFeatures } from "@/components/homepage/LandingFeatures";
 import { LandingHero } from "@/components/homepage/LandingHero";
@@ -17,7 +18,17 @@ export default function Home(): JSX.Element {
 
   useEffect(() => {
     if (!loading && user) {
+      trackEvent('homepage_redirect_to_dashboard', {
+        userId: user.id,
+      })
       router.push('/dashboard')
+      return
+    }
+
+    if (!loading && !user) {
+      trackEvent('homepage_viewed', {
+        auth_state: 'logged_out',
+      })
     }
   }, [user, loading, router])
 
