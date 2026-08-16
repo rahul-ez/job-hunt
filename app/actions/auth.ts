@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { createAuthActions } from '@insforge/sdk/ssr'
 
 export async function initiateOAuth(provider: 'google' | 'github'): Promise<{ error?: string }> {
+  let redirectUrl: string
+
   try {
     const cookieStore = await cookies()
     const auth = createAuthActions({ cookies: cookieStore })
@@ -27,12 +29,16 @@ export async function initiateOAuth(provider: 'google' | 'github'): Promise<{ er
       maxAge: 600
     })
 
-    redirect(data.url)
+    redirectUrl = data.url
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred during authentication'
     console.error('OAuth initiation error:', message)
     return { error: 'oauth_init_failed' }
   }
+
+  // redirect() must be called outside try/catch — it throws NEXT_REDIRECT internally
+  // and catch would swallow it, preventing the browser from navigating to the OAuth provider
+  redirect(redirectUrl)
 }
 
 export async function signOut() {

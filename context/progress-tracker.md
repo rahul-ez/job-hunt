@@ -6,9 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 2 — Profile Page (starting next)
-**Last completed:** 04 Database Schema
-**Next:** 05 Profile Page — Full UI
+**Phase:** Phase 3 — Find Jobs Page (next)
+**Last completed:** 08 Resume PDF Generation from Profile
+**Next:** 09 Find Jobs Page — Full UI
 
 ---
 
@@ -23,10 +23,10 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ### Phase 2 — Profile Page
 
-- [ ] 05 Profile Page — Full UI
-- [ ] 06 Profile Save Logic
-- [ ] 07 AI Profile Extraction from Resume
-- [ ] 08 Resume PDF Generation from Profile
+- [x] 05 Profile Page — Full UI
+- [x] 06 Profile Save Logic
+- [x] 07 AI Profile Extraction from Resume
+- [x] 08 Resume PDF Generation from Profile
 
 ### Phase 3 — Find Jobs Page
 
@@ -50,10 +50,12 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Decisions Made During Build
 
-_Add decisions here as they are made during implementation._
+- **06 Profile Save Logic:** Used `insforge.database.from('profiles').upsert()` for profile mutations and `insforge.storage.from('resumes').upload()` for PDF uploads in Server Actions (`actions/profile.ts`). Created `calculateProfileCompletion` in `lib/profile-utils.ts` to compute missing fields dynamically.
+- **07 AI Profile Extraction from Resume:** Created `POST /api/resume/extract` using `PDFParse` (`pdf-parse`) and `@google/genai` (`gemini-2.5-flash` with `GEMINI_API_KEY`). Form fields populate in client state via `ProfileContainer` for user review before saving.
+- **08 Resume PDF Generation from Profile:** Created `POST /api/resume/generate` using Gemini API (`gemini-2.5-flash`) for resume copy synthesis and `@react-pdf/renderer` (`ResumePDF.tsx`) for rendering A4 PDF buffer. Buffer uploaded to InsForge Storage `resumes/{user_id}/resume.pdf` with `upsert: true`.
 
 ---
 
 ## Notes
 
-_Add notes here as the build progresses — workarounds, patterns, anything that differs from the context files._
+- Profile page `app/(protected)/profile/page.tsx` fetches profile row using `insforge.database.from('profiles').select('*').eq('id', user.id).single()`.

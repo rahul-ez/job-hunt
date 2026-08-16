@@ -1,47 +1,55 @@
-# Memory — Feature 04 Database Schema
+# Memory — Phase 2 Profile Page Complete (Features 06, 07, 08)
 
-Last updated: 2026-08-16
+Last updated: 2026-08-16 23:11
 
 ## What was built
 
-- Logged into InsForge CLI and linked the project (JobPilot, `t3bkeev8.ap-southeast`).
-- InsForge agent skills and `find-skills` installed globally via the link command.
-- Created and applied 4 migration files in `migrations/`:
-  - `20260816055305_profiles.sql` — profiles table + RLS
-  - `20260816055328_agent-runs.sql` — agent_runs table + RLS
-  - `20260816055337_jobs.sql` — jobs table + 2 indexes + RLS
-  - `20260816055347_agent-logs.sql` — agent_logs table + index + RLS
-- Created the `resumes` storage bucket as **private** via `insforge storage create-bucket resumes --private`.
-- Updated `context/progress-tracker.md` — Feature 04 marked complete, next is Feature 05.
+- **Feature 06 — Profile Save Logic**:
+  - Created `lib/profile-utils.ts` for dynamic profile completion percentage and missing fields calculation (`calculateProfileCompletion`).
+  - Created `actions/profile.ts` with `saveProfile` and `uploadResumeAction` Server Actions using `@insforge/sdk/ssr`.
+  - Updated `app/(protected)/profile/page.tsx` to fetch the authenticated user's `profiles` record server-side using `createInsforgeServer()`.
+  - Updated `ProfileBanner.tsx`, `ResumeSection.tsx`, and `ProfileForm.tsx` to handle dynamic profile saving and resume PDF storage uploads.
+
+- **Feature 07 — AI Profile Extraction from Resume**:
+  - Installed `@google/genai` and `pdf-parse`.
+  - Created `POST /api/resume/extract` using Gemini API (`gemini-2.5-flash` via `@google/genai`) with base64 PDF `inlineData`.
+  - Created `components/profile/ProfileContainer.tsx` client bridge component to manage state between `ResumeSection` and `ProfileForm`.
+  - Updated `ResumeSection.tsx` with "Extract from Resume" CTA button.
+  - Updated `ProfileForm.tsx` to auto-fill extracted fields and display a review notification banner.
+
+- **Feature 08 — Resume PDF Generation from Profile**:
+  - Installed `@react-pdf/renderer`.
+  - Created `components/pdf/ResumePDF.tsx` server-side React-PDF document template styled with project design tokens (`#7C5CFC` accent, Helvetica font, 32pt padding).
+  - Created `POST /api/resume/generate` using Gemini 2.5 Flash to synthesize high-impact professional summary and bullet points, and `@react-pdf/renderer` (`renderToBuffer()`) to generate binary A4 PDF buffer.
+  - Saves generated PDF to InsForge Storage bucket `resumes` at `resumes/{user_id}/resume.pdf` with `upsert: true` and updates `profiles.resume_pdf_url`.
+  - Connected "Generate Resume from Profile" CTA in `ResumeSection.tsx`.
 
 ## Decisions made
 
-- Used `insforge db migrations` (new → up --all) instead of raw SQL import — keeps schema version-controlled and replayable.
-- Migration names use hyphens not underscores — CLI enforces lowercase letters, numbers, and hyphens only.
-- `resumes` bucket set to private (not public) — InsForge handles access control at the bucket level for private buckets. No separate `storage.objects` RLS policies needed.
-- Storage policies migration was written then discarded — InsForge's storage schema uses `bucket`/`key` columns (not Supabase's `bucket_id`/`name`), and private bucket access is enforced at bucket level, not via RLS.
+- **Server-side data fetching & Server Actions**: Profile data fetched server-side in `app/(protected)/profile/page.tsx`. Mutations handled via Server Actions in `actions/profile.ts`.
+- **Client router re-hydration**: Called `router.refresh()` from `next/navigation` in `ProfileForm.tsx` and `ResumeSection.tsx` after Server Actions to instantly refresh server component `ProfileBanner.tsx`.
+- **Multimodal AI PDF Parsing**: Used Gemini 2.5 Flash's native PDF `inlineData` base64 parser for AI profile extraction instead of third-party Node.js PDF text extractors.
+- **Base64 payload sanitization**: Sanitized base64 PDF payload (`pdfBase64.replace(/[\r\n\s]/g, '')`) before sending to `inlineData`.
+- **React-PDF Server Rendering**: Used `@react-pdf/renderer` server-side with `renderToBuffer()` to generate binary PDF buffers uploaded directly to InsForge Storage.
 
 ## Problems solved
 
-- PowerShell does not support `&&` for chaining commands — ran each migration command separately.
-- CLI rejects underscores in migration names — used hyphens (`agent-runs`, `agent-logs`).
-- InsForge `storage.objects` has different column names than Supabase (`bucket` not `bucket_id`, `key` not `name`) — discovered by querying `information_schema.columns`.
-- `insforge db migrations up` requires an explicit mode flag — correct command is `up --all`.
+- `pdf-parse` v2 failed in Next.js server runtime due to `pdfjs-dist` worker dynamic import issues; resolved by using Gemini 2.5 Flash's native PDF multimodal base64 `inlineData` parser.
+- "View uploaded PDF" link in `ResumeSection.tsx` was a non-clickable `<div>` inside a drop zone container; converted to `<a href={resumeUrl} target="_blank" rel="noopener noreferrer">` with `onClick={(e) => e.stopPropagation()}`.
+- `EXPERIENCE` missing field tag remained stuck when work roles were added; updated `calculateProfileCompletion` to check `yearsExperience > 0 || workRoles.length > 0`.
+- `renderToBuffer` type mismatch in TypeScript `.ts` file resolved using `React.createElement(ResumePDF, { data }) as unknown as React.ReactElement<DocumentProps>`.
 
 ## Current state
 
-- All 4 tables exist in the live InsForge project with RLS enabled and scoped to `auth.uid() = user_id`.
-- `resumes` storage bucket exists, is private, 0 objects.
-- Phase 1 fully complete (01 Homepage, 02 Auth, 03 PostHog, 04 Database Schema).
-- Phase 2 not started.
+- Phase 1 (Foundation) & Phase 2 (Profile Page) are 100% complete (01 Homepage, 02 Auth, 03 PostHog, 04 Database Schema, 05 Profile Page UI, 06 Profile Save Logic, 07 AI Profile Extraction from Resume, 08 Resume PDF Generation from Profile).
+- All code compiles cleanly with `npx tsc --noEmit` (0 errors).
 
 ## Next session starts with
 
-- Feature 05 — Profile Page Full UI.
-- Build the complete profile page with mock data first (no save logic yet).
-- Sections: profile completion banner, resume upload area, profile form (Personal Info, Professional Info, Work Experience, Education, Job Preferences), Save Profile button.
-- Run `/architect` before starting if the session is fresh.
+- Feature 09 — Find Jobs Page — Full UI.
+- Build the complete Find Jobs page UI with mock data first (search controls, filter tabs, jobs table, pagination).
+- Run `/architect feature 09` before starting implementation.
 
 ## Open questions
 
-- None — schema is clean and matches `architecture.md` exactly (with the InsForge storage column name difference documented above).
+- None — Profile page flow and resume AI operations are complete and fully working.
