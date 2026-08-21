@@ -339,6 +339,71 @@ Last updated: 2026-08-16
 | Padding          | 32pt                                |
 | Accent           | `#7C5CFC` for title, header, skills |
 
+---
 
+### Find Jobs Page Components
 
+#### SearchControls
+File: [components/find-jobs/SearchControls.tsx](../components/find-jobs/SearchControls.tsx)
+Last updated: 2026-08-21
 
+| Property         | Class                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Background       | `bg-surface`                                                         |
+| Border           | `border border-border`                                               |
+| Border radius    | `rounded-2xl`                                                        |
+| Text — primary   | `text-text-primary`                                                  |
+| Text — secondary | `text-text-dark`                                                     |
+| Spacing          | `p-6`                                                                |
+| Inputs           | `h-11 rounded-lg border border-border bg-surface text-sm font-medium` |
+| Primary button   | `h-11 rounded-lg bg-accent px-6 text-sm font-medium text-accent-foreground hover:bg-accent-dark` |
+| Banner           | `bg-success-lightest border border-success-light/70 text-success-dark rounded-lg px-4 py-3` |
+| Shadow           | `shadow-sm`                                                          |
+
+---
+
+#### JobFilters
+File: [components/find-jobs/JobFilters.tsx](../components/find-jobs/JobFilters.tsx)
+Last updated: 2026-08-21
+
+| Property         | Class                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Search Input     | `h-11 max-w-md rounded-xl border border-border bg-surface pl-10 pr-3 text-sm font-medium text-text-primary` |
+| Select Dropdowns | `h-11 rounded-xl border border-border bg-surface pl-4 pr-9 text-sm font-medium text-text-primary hover:bg-surface-secondary` |
+
+---
+
+#### JobsTable
+File: [components/find-jobs/JobsTable.tsx](../components/find-jobs/JobsTable.tsx)
+Last updated: 2026-08-21
+
+| Property         | Class                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Container        | `rounded-2xl border border-border bg-surface shadow-sm overflow-x-auto` |
+| Headers          | `px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary border-b border-border` |
+| Rows             | `border-b border-border hover:bg-surface-secondary/70 transition-colors` |
+| Company avatar   | `h-9 w-9 rounded-lg border border-border bg-surface-secondary text-text-dark` |
+| Match Score bar  | Track: `h-1.5 w-20 rounded-full bg-border-light overflow-hidden`; Fill: `bg-success` / `bg-info-dark` / `bg-warning` |
+
+---
+
+#### JobsPagination
+File: [components/find-jobs/JobsPagination.tsx](../components/find-jobs/JobsPagination.tsx)
+Last updated: 2026-08-21
+
+| Property         | Class                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Counter text     | `text-sm font-medium text-text-secondary`                            |
+| Button base      | `rounded-lg border border-border bg-surface px-3.5 py-1.5 text-sm font-medium text-text-dark hover:bg-surface-secondary` |
+| Active page      | `border border-accent/20 bg-accent-light text-accent font-semibold`  |
+
+---
+
+#### Find Jobs Page Layout
+File: [app/(protected)/find-jobs/page.tsx](../app/(protected)/find-jobs/page.tsx)
+Last updated: 2026-08-21
+
+| Property         | Class                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Container        | `min-h-screen bg-background`                                         |
+| Main wrapper     | `mx-auto max-w-[1128px] px-6 py-8`                                   |
